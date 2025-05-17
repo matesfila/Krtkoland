@@ -31,7 +31,7 @@ Takže napr. ak chceš prejsť z jedného bunkra do druhého bunkra, celkový �
 - čas potrebný na prechod tunelom,
 - čas prejdenia rebríkom.
 
-## Popis riešenia
+## Špecifikácia
 
 Naprogramuj službu __KrtkoService__, do ktorej injectneš zvonku objekt __Krtkoland__ (sieť tunelov, bunkrov, veží a skladu) a potom naprogramuj metódu __theBestTimeAndPath__, kde vstupný parameter bude jedna konkrétna veža (odporúčam ako objekt). Úlohou metódy je vrátiť najlepší čas a cestu ako sa krtko Lukáš vie dostať do skladu. Ak je takých ciest viac, tak vráť práve jednu. Služba by mala dať vedieť ak neexistuje žiadna cesta do skladu. 
 
