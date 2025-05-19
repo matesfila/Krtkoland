@@ -1,7 +1,6 @@
 package com.kbsystems.zadanie.matusfila.krtkoland.controllers;
 
-import com.kbsystems.zadanie.matusfila.krtkoland.models.LandPath;
-import com.kbsystems.zadanie.matusfila.krtkoland.models.Tower;
+import com.kbsystems.zadanie.matusfila.krtkoland.models.BestTimeAndPathResult;
 import com.kbsystems.zadanie.matusfila.krtkoland.services.KrtkoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,13 +16,13 @@ public class KrtkoRestController {
     KrtkoService krtkoService;
 
     @GetMapping("/getTest")
-    public String getTest(Tower t) {
-        return "toto je testovacia metoda";
+    public String getTest(String s) {
+        return "toto je testovacia metoda " + s;
     }
 
     @GetMapping("/getBestPath")
-    public LandPath getBestPath(Tower t) {
-        return krtkoService.theBestTimeAndPath(t);
+    public BestTimeAndPathResult getBestPath(String source, String target) {
+        return krtkoService.theBestTimeAndPath(source, target);
     }
 
 }

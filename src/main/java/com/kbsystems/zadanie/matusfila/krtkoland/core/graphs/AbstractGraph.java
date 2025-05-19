@@ -4,10 +4,7 @@ import com.kbsystems.zadanie.matusfila.krtkoland.core.graphs.interfaces.Edge;
 import com.kbsystems.zadanie.matusfila.krtkoland.core.graphs.interfaces.Graph;
 import com.kbsystems.zadanie.matusfila.krtkoland.core.graphs.interfaces.Vertex;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class AbstractGraph<V extends Vertex, E extends Edge<V>> implements Graph<V, E> {
@@ -20,10 +17,6 @@ public class AbstractGraph<V extends Vertex, E extends Edge<V>> implements Graph
         edges = new HashSet<>();
         vertices = new HashSet<>();
     }
-
-//    public static enum OrientationEnu {
-//        ORIENTED, SYMETRIC
-//    }
 
     @Override
     public Set<E> getEdges() {
@@ -56,4 +49,14 @@ public class AbstractGraph<V extends Vertex, E extends Edge<V>> implements Graph
         return allEdges(vertex).stream().map(Edge::getTarget).collect(Collectors.toUnmodifiableSet());
     }
 
+    public Optional<V> vertexById(ID id) {
+        return getVertices().stream().filter(v -> Objects.equals(v.getId(), id)).findFirst();
+    }
+
+    public E findEdge(V source, V target) {
+        return getEdges().stream()
+                .filter(e -> Objects.equals(e.getSource(), source) && Objects.equals(e.getTarget(), target))
+                .findFirst()
+                .get();
+    }
 }

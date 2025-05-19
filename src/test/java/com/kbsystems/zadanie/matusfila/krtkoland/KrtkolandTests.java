@@ -11,13 +11,11 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class KrtkolandTests {
-
 
 	private static Tower[] towers;
 	private static Bunker[] bunkers;
@@ -44,15 +42,6 @@ class KrtkolandTests {
 				new Bunker("b5", DoorTypeEnu.GREEN),
 				new Bunker("b6", DoorTypeEnu.RED)
 		};
-//		bunkers = new Bunker[]{
-//				new Bunker("b0", DoorTypeEnu.BLUE),
-//				new Bunker("b1", DoorTypeEnu.GREEN),
-//				new Bunker("b2", DoorTypeEnu.RED),
-//				new Bunker("b3", DoorTypeEnu.GREEN),
-//				new Bunker("b4", DoorTypeEnu.GREEN),
-//				new Bunker("b5", DoorTypeEnu.GREEN),
-//				new Bunker("b6", DoorTypeEnu.RED)
-//		};
 		warehouses = new Warehouse[]{
 				new Warehouse("sklad0", DoorTypeEnu.GREEN),
 				new Warehouse("sklad1", DoorTypeEnu.BLUE),
@@ -77,9 +66,9 @@ class KrtkolandTests {
 	@Test
 	public void testGraphBasics() {
 		KrtkolandImpl krtkoland = new KrtkolandImpl();
-		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
-		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
-		Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+		KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+		KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+		KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
 		//printAllEdges(krtkoland);
 
 		assertEquals(1, krtkoland.allEdges(towers[0]).size());
@@ -96,6 +85,37 @@ class KrtkolandTests {
 
 	}
 
+	/**
+	 * Test metódy na výpočet váhy celej cesty krtkoland.computePathWeight.
+	 */
+	@Test
+	public void testPathWeights() {
+		Tunnel tunel1 = new Tunnel("tunel_1", towers[0], bunkers[0], 4, TunnelSurfaceEnu.BLATO, true);
+		Tunnel tunel2 = new Tunnel("tunel_2", bunkers[0], bunkers[1], 5, TunnelSurfaceEnu.BLATO, true);
+		Tunnel tunel3 = new Tunnel("tunel_3", bunkers[1], warehouses[0], 6, TunnelSurfaceEnu.BLATO, true);
+
+		//tunel + schody veze + dvere bunkra
+		float tunel1Weight = (4 * 1.0f * 1) + 0.5f + 2f;
+		float tunel2Weight = 2f + 5 + 3;
+		float tunel3Weight = 3f + 6 + 2f;
+
+		assertEquals(0, Float.compare(tunel1.getWeight(), tunel1Weight));
+		assertEquals(0, Float.compare(tunel2.getWeight(), tunel2Weight));
+		assertEquals(0, Float.compare(tunel3.getWeight(), tunel3Weight));
+
+		KrtkolandImpl krtkoland = new KrtkolandImpl();
+		krtkoland.addEdge(tunel1);
+		krtkoland.addEdge(tunel2);
+		krtkoland.addEdge(tunel3);
+
+		float pathWeight = krtkoland.computePathWeight(Arrays.asList(towers[0], bunkers[0], bunkers[1], warehouses[0]));
+
+		assertEquals(0, Float.compare(pathWeight, tunel1Weight + tunel2Weight + tunel3Weight));
+	}
+
+	/**
+	 * Test na korektnosť počítania váhy tunelov (čo je suma váh veže, tunelu a dverí).
+	 */
 	@Test
 	public void testTunnelWeights() {
 
@@ -145,9 +165,9 @@ class KrtkolandTests {
 	public void testFindBestPath() {
 		{
 			KrtkolandImpl krtkoland = new KrtkolandImpl();
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
 			//printAllEdges(krtkoland);
 
 			// do grafu sa doplnia automaticky tunely medzi všetkými vrcholmi, ich hodnota je schválne veľká, aby najkratšou cestou
@@ -164,10 +184,10 @@ class KrtkolandTests {
 		}
 		{
 			KrtkolandImpl krtkoland = new KrtkolandImpl();
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[1], bunkers[2], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[1], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
 			//printAllEdges(krtkoland);
 
 			updateToFullGraph(krtkoland, 1000);
@@ -182,11 +202,11 @@ class KrtkolandTests {
 		}
 		{
 			KrtkolandImpl krtkoland = new KrtkolandImpl();
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[0], bunkers[0], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[0], warehouses[0]);
 			//printAllEdges(krtkoland);
 
 			updateToFullGraph(krtkoland, 1000);
@@ -201,11 +221,11 @@ class KrtkolandTests {
 		}
 		{
 			KrtkolandImpl krtkoland = new KrtkolandImpl();
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[1], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[2], bunkers[1], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[1], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[2], bunkers[1], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
 			//printAllEdges(krtkoland);
 
 			updateToFullGraph(krtkoland, 1000);
@@ -219,11 +239,11 @@ class KrtkolandTests {
 		}
 		{
 			KrtkolandImpl krtkoland = new KrtkolandImpl();
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[4], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[2], bunkers[4], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[4], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[2], bunkers[4], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
 			//printAllEdges(krtkoland);
 
 			updateToFullGraph(krtkoland, 1000);
@@ -237,12 +257,12 @@ class KrtkolandTests {
 		}
 		{
 			KrtkolandImpl krtkoland = new KrtkolandImpl();
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[4], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[2], bunkers[4], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
-			Utils.addSimplePath(krtkoland, towers[1], bunkers[0], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[4], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[2], bunkers[4], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
+			KrtkolandFactory.addSimplePath(krtkoland, towers[1], bunkers[0], warehouses[0]);
 			//printAllEdges(krtkoland);
 
 			updateToFullGraph(krtkoland, 1);
@@ -259,10 +279,10 @@ class KrtkolandTests {
 	@Test
 	public void testUtils() {
 		KrtkolandImpl krtkoland = new KrtkolandImpl();
-		Utils.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
-		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
-		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
-		Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+		KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
+		KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+		KrtkolandFactory.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+		KrtkolandFactory.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
 
 		// 18 orientovaných hrán, 9 keby sa brali ako neorientované
 		assertEquals(18, krtkoland.getEdges().size());
@@ -273,26 +293,6 @@ class KrtkolandTests {
 	}
 
 	static class Utils {
-
-		public static void addSimplePath(KrtkolandImpl k, Room... rooms) {
-			for (int i = 0; i < rooms.length - 1; i++) {
-				Room r1 = rooms[i];
-				Room r2 = rooms[i+1];
-				if (!k.isEdge(r1, r2)) {
-					k.addEdge(
-							new Tunnel(
-									UUID.randomUUID().toString(),
-									r1,
-									r2,
-									1,
-									TunnelSurfaceEnu.BLATO,
-									true
-							)
-					);
-				}
-			}
-		}
-
 		public static void printAllEdges(KrtkolandImpl g) {
 			System.out.println(" =========================================== Vsetky hrany =======================================");
 			g.getEdges().forEach(e -> System.out.println(e.getSource().getId().getValue() + " - " + e.getTarget().getId().getValue()));
