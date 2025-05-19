@@ -52,4 +52,8 @@ public class AbstractGraph<V extends Vertex, E extends Edge<V>> implements Graph
         return edges.stream().filter(e -> Objects.equals(e.getSource(), source)).collect(Collectors.toUnmodifiableSet());
     }
 
+    public Set<V> allNeighbors(V vertex) {
+        return allEdges(vertex).stream().map(Edge::getTarget).collect(Collectors.toUnmodifiableSet());
+    }
+
 }

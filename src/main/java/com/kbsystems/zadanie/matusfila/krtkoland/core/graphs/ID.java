@@ -13,6 +13,9 @@ public class ID implements Comparable<ID>, GraphObject {
         this.value = value;
     }
 
+    public String getValue() {
+        return value;
+    }
 
     @Override
     public int compareTo(ID o) {

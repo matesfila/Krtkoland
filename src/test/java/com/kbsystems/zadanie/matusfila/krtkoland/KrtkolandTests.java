@@ -1,81 +1,309 @@
 package com.kbsystems.zadanie.matusfila.krtkoland;
 
-import com.kbsystems.zadanie.matusfila.krtkoland.core.krtkoland.Bunker;
-import com.kbsystems.zadanie.matusfila.krtkoland.core.krtkoland.Tower;
-import com.kbsystems.zadanie.matusfila.krtkoland.core.krtkoland.Tunnel;
-import com.kbsystems.zadanie.matusfila.krtkoland.core.krtkoland.Warehouse;
+import com.kbsystems.zadanie.matusfila.krtkoland.core.graphs.algorithms.DijkstraGraphAlgorithm;
+import com.kbsystems.zadanie.matusfila.krtkoland.core.krtkoland.*;
 import com.kbsystems.zadanie.matusfila.krtkoland.core.krtkoland.enums.DoorTypeEnu;
 import com.kbsystems.zadanie.matusfila.krtkoland.core.krtkoland.enums.TunnelSurfaceEnu;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class KrtkolandTests {
+
+
+	private static Tower[] towers;
+	private static Bunker[] bunkers;
+	private static Warehouse[] warehouses;
+
+	@BeforeAll
+	public static void initialize() {
+
+		towers = new Tower[]{
+				new Tower("t0", 1),
+				new Tower("t1", 2),
+				new Tower("t2", 3),
+				new Tower("t3", 4),
+				new Tower("t4", 5),
+				new Tower("t5", 6),
+				new Tower("t6", 7)
+		};
+		bunkers = new Bunker[]{
+				new Bunker("b0", DoorTypeEnu.GREEN),
+				new Bunker("b1", DoorTypeEnu.BLUE),
+				new Bunker("b2", DoorTypeEnu.RED),
+				new Bunker("b3", DoorTypeEnu.GREEN),
+				new Bunker("b4", DoorTypeEnu.GREEN),
+				new Bunker("b5", DoorTypeEnu.GREEN),
+				new Bunker("b6", DoorTypeEnu.RED)
+		};
+//		bunkers = new Bunker[]{
+//				new Bunker("b0", DoorTypeEnu.BLUE),
+//				new Bunker("b1", DoorTypeEnu.GREEN),
+//				new Bunker("b2", DoorTypeEnu.RED),
+//				new Bunker("b3", DoorTypeEnu.GREEN),
+//				new Bunker("b4", DoorTypeEnu.GREEN),
+//				new Bunker("b5", DoorTypeEnu.GREEN),
+//				new Bunker("b6", DoorTypeEnu.RED)
+//		};
+		warehouses = new Warehouse[]{
+				new Warehouse("sklad0", DoorTypeEnu.GREEN),
+				new Warehouse("sklad1", DoorTypeEnu.BLUE),
+				new Warehouse("sklad2", DoorTypeEnu.RED)
+		};
+	}
+
+	private static void updateToFullGraph(KrtkolandImpl k, int lengthMeters) {
+		int i = 0;
+		for (Room r1 : k.getVertices()) {
+			for (Room r2 : k.getVertices()) {
+				if (!k.isEdge(r1, r2) && !Objects.equals(r1, r2)) {
+					k.addEdge(new Tunnel(String.valueOf(i++), r1, r2, lengthMeters, TunnelSurfaceEnu.BLATO, true));
+				}
+			}
+		}
+	}
+
+
+
+
+	@Test
+	public void testGraphBasics() {
+		KrtkolandImpl krtkoland = new KrtkolandImpl();
+		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+		Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+		//printAllEdges(krtkoland);
+
+		assertEquals(1, krtkoland.allEdges(towers[0]).size());
+		Assertions.assertTrue(krtkoland.allNeighbors(towers[0]).containsAll(Arrays.asList(bunkers[1])));
+
+		assertEquals(3, krtkoland.allEdges(bunkers[1]).size());
+		Assertions.assertTrue(krtkoland.allNeighbors(bunkers[1]).containsAll(Arrays.asList(towers[0], bunkers[2], warehouses[0])));
+
+		assertEquals(3, krtkoland.allEdges(warehouses[0]).size());
+		Assertions.assertTrue(krtkoland.allNeighbors(warehouses[0]).containsAll(Arrays.asList(bunkers[1], bunkers[2], bunkers[6])));
+
+		assertEquals(2, krtkoland.allEdges(bunkers[5]).size());
+		Assertions.assertTrue(krtkoland.allNeighbors(bunkers[5]).containsAll(Arrays.asList(bunkers[2], bunkers[6])));
+
+	}
 
 	@Test
 	public void testTunnelWeights() {
 
-		Tower t1 = new Tower("t1", 1);
-		Tower t2 = new Tower("t2", 2);
-		Tower t3 = new Tower("t3", 3);
-		Tower t4 = new Tower("t4", 4);
-		Tower t5 = new Tower("t5", 5);
-		Bunker b1 = new Bunker("b1", DoorTypeEnu.BLUE);
-		Bunker b2 = new Bunker("b2", DoorTypeEnu.GREEN);
-		Bunker b3 = new Bunker("b3", DoorTypeEnu.RED);
-		Bunker b4 = new Bunker("b4", DoorTypeEnu.GREEN);
-		Bunker b5 = new Bunker("b5", DoorTypeEnu.RED);
-		Warehouse w1 = new Warehouse("sklad1", DoorTypeEnu.BLUE);
-		Warehouse w2 = new Warehouse("sklad2", DoorTypeEnu.GREEN);
-		Warehouse w3 = new Warehouse("sklad3", DoorTypeEnu.RED);
-
 		{
-			Tunnel tunel1 = new Tunnel("tunel_1", t1, b1, 4, TunnelSurfaceEnu.BLATO, true);
-			Tunnel tunel2 = new Tunnel("tunel_2", t1, b1, 5, TunnelSurfaceEnu.ASFALT, true);
-			Tunnel tunel3 = new Tunnel("tunel_3", t1, b1, 6, TunnelSurfaceEnu.STRK, true);
+			Tunnel tunel1 = new Tunnel("tunel_1", towers[0], bunkers[0], 4, TunnelSurfaceEnu.BLATO, true);
+			Tunnel tunel2 = new Tunnel("tunel_2", towers[0], bunkers[0], 5, TunnelSurfaceEnu.ASFALT, true);
+			Tunnel tunel3 = new Tunnel("tunel_3", towers[0], bunkers[0], 6, TunnelSurfaceEnu.STRK, true);
 
 			//tunel + schody veze + dvere bunkra
-			Assertions.assertEquals(0, Float.compare(tunel1.getWeight(), 4 * 1.0f * 1 + 0.5f + 3f));
-			Assertions.assertEquals(0, Float.compare(tunel2.getWeight(), 5 * 0.5f * 1 + 0.5f + 3f));
-			Assertions.assertEquals(0, Float.compare(tunel3.getWeight(), 6 * 0.75f * 1 + 0.5f + 3f));
+			assertEquals(0, Float.compare(tunel1.getWeight(), (4 * 1.0f * 1) + 0.5f + 2f));
+			assertEquals(0, Float.compare(tunel2.getWeight(), (5 * 0.5f * 1) + 0.5f + 2f));
+			assertEquals(0, Float.compare(tunel3.getWeight(), (6 * 0.75f * 1) + 0.5f + 2f));
 		}
 
 		{
-			Tunnel tunel1 = new Tunnel("tunel_1", t1, b1, 44, TunnelSurfaceEnu.BLATO, false);
-			Tunnel tunel2 = new Tunnel("tunel_2", t1, b1, 55, TunnelSurfaceEnu.ASFALT, false);
-			Tunnel tunel3 = new Tunnel("tunel_3", t1, b1, 66, TunnelSurfaceEnu.STRK, false);
+			Tunnel tunel1 = new Tunnel("tunel_1", towers[0], bunkers[0], 44, TunnelSurfaceEnu.BLATO, false);
+			Tunnel tunel2 = new Tunnel("tunel_2", towers[0], bunkers[0], 55, TunnelSurfaceEnu.ASFALT, false);
+			Tunnel tunel3 = new Tunnel("tunel_3", towers[0], bunkers[0], 66, TunnelSurfaceEnu.STRK, false);
 
-			Assertions.assertEquals(0, Float.compare(tunel1.getWeight(), 44 * 1.0f * 1.2f + 0.5f + 3f));
-			Assertions.assertEquals(0, Float.compare(tunel2.getWeight(), 55 * 0.5f * 1.2f + 0.5f + 3f));
-			Assertions.assertEquals(0, Float.compare(tunel3.getWeight(), 66 * 0.75f * 1.2f + 0.5f + 3f));
+			assertEquals(0, Float.compare(tunel1.getWeight(), 44 * 1.0f * 1.2f + 0.5f + 2f));
+			assertEquals(0, Float.compare(tunel2.getWeight(), 55 * 0.5f * 1.2f + 0.5f + 2f));
+			assertEquals(0, Float.compare(tunel3.getWeight(), 66 * 0.75f * 1.2f + 0.5f + 2f));
 		}
 
 		{
-			Tunnel tunel1 = new Tunnel("tunel_1", t1, b1, 44, TunnelSurfaceEnu.BLATO, false);
-			Tunnel tunel2 = new Tunnel("tunel_2", t1, b2, 55, TunnelSurfaceEnu.ASFALT, false);
-			Tunnel tunel3 = new Tunnel("tunel_3", t1, b3, 66, TunnelSurfaceEnu.STRK, false);
+			Tunnel tunel1 = new Tunnel("tunel_1", towers[0], bunkers[0], 44, TunnelSurfaceEnu.BLATO, false);
+			Tunnel tunel2 = new Tunnel("tunel_2", towers[0], bunkers[1], 55, TunnelSurfaceEnu.ASFALT, false);
+			Tunnel tunel3 = new Tunnel("tunel_3", towers[0], bunkers[2], 66, TunnelSurfaceEnu.STRK, false);
 
-			Assertions.assertEquals(0, Float.compare(tunel1.getWeight(), 44 * 1.0f * 1.2f + 0.5f + 3f));
-			Assertions.assertEquals(0, Float.compare(tunel2.getWeight(), 55 * 0.5f * 1.2f + 0.5f + 2f));
-			Assertions.assertEquals(0, Float.compare(tunel3.getWeight(), 66 * 0.75f * 1.2f + 0.5f + 5f));
+			assertEquals(0, Float.compare(tunel1.getWeight(), 44 * 1.0f * 1.2f + 0.5f + 2f));
+			assertEquals(0, Float.compare(tunel2.getWeight(), 55 * 0.5f * 1.2f + 0.5f + 3f));
+			assertEquals(0, Float.compare(tunel3.getWeight(), 66 * 0.75f * 1.2f + 0.5f + 5f));
 		}
 		{
-			Tunnel tunel1 = new Tunnel("tunel_1", t1, w1, 44, TunnelSurfaceEnu.BLATO, false);
-			Tunnel tunel2 = new Tunnel("tunel_2", t1, w2, 55, TunnelSurfaceEnu.ASFALT, false);
-			Tunnel tunel3 = new Tunnel("tunel_3", t1, w3, 66, TunnelSurfaceEnu.STRK, false);
+			Tunnel tunel1 = new Tunnel("tunel_1", towers[0], warehouses[0], 44, TunnelSurfaceEnu.BLATO, false);
+			Tunnel tunel2 = new Tunnel("tunel_2", towers[0], warehouses[1], 55, TunnelSurfaceEnu.ASFALT, false);
+			Tunnel tunel3 = new Tunnel("tunel_3", towers[0], warehouses[2], 66, TunnelSurfaceEnu.STRK, false);
 
-			Assertions.assertEquals(0, Float.compare(tunel1.getWeight(), 44 * 1.0f * 1.2f + 0.5f + 3f));
-			Assertions.assertEquals(0, Float.compare(tunel2.getWeight(), 55 * 0.5f * 1.2f + 0.5f + 2f));
-			Assertions.assertEquals(0, Float.compare(tunel3.getWeight(), 66 * 0.75f * 1.2f + 0.5f + 5f));
+			assertEquals(0, Float.compare(tunel1.getWeight(), 44 * 1.0f * 1.2f + 0.5f + 2f));
+			assertEquals(0, Float.compare(tunel2.getWeight(), 55 * 0.5f * 1.2f + 0.5f + 3f));
+			assertEquals(0, Float.compare(tunel3.getWeight(), 66 * 0.75f * 1.2f + 0.5f + 5f));
 		}
 
 	}
 
 	@Test
 	public void testFindBestPath() {
-		// TODO
-//		LandPath landPath = krtkoService.theBestTimeAndPath(new Tower());
-//		Assertions.assertNotNull(landPath);
+		{
+			KrtkolandImpl krtkoland = new KrtkolandImpl();
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			//printAllEdges(krtkoland);
+
+			// do grafu sa doplnia automaticky tunely medzi všetkými vrcholmi, ich hodnota je schválne veľká, aby najkratšou cestou
+			// bola cesta ktorú zadáme manuálne
+			updateToFullGraph(krtkoland, 1000);
+
+			List<Room> shortestPath = DijkstraGraphAlgorithm.findShortestPath(krtkoland, towers[0], warehouses[0]).get();
+			Utils.printPath(shortestPath);
+			Assertions.assertIterableEquals(
+					Arrays.asList(towers[0], bunkers[1], warehouses[0]),
+					shortestPath
+			);
+
+		}
+		{
+			KrtkolandImpl krtkoland = new KrtkolandImpl();
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[1], bunkers[2], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			//printAllEdges(krtkoland);
+
+			updateToFullGraph(krtkoland, 1000);
+
+			List<Room> shortestPath = DijkstraGraphAlgorithm.findShortestPath(krtkoland, towers[0], warehouses[0]).get();
+			Utils.printPath(shortestPath);
+			Assertions.assertIterableEquals(
+					Arrays.asList(towers[0], bunkers[1], warehouses[0]),
+					shortestPath
+			);
+
+		}
+		{
+			KrtkolandImpl krtkoland = new KrtkolandImpl();
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[0], bunkers[0], warehouses[0]);
+			//printAllEdges(krtkoland);
+
+			updateToFullGraph(krtkoland, 1000);
+
+			List<Room> shortestPath = DijkstraGraphAlgorithm.findShortestPath(krtkoland, towers[0], warehouses[0]).get();
+			Utils.printPath(shortestPath);
+			Assertions.assertIterableEquals(
+					Arrays.asList(towers[0], bunkers[0], warehouses[0]),
+					shortestPath
+			);
+
+		}
+		{
+			KrtkolandImpl krtkoland = new KrtkolandImpl();
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[1], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[2], bunkers[1], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
+			//printAllEdges(krtkoland);
+
+			updateToFullGraph(krtkoland, 1000);
+
+			List<Room> shortestPath = DijkstraGraphAlgorithm.findShortestPath(krtkoland, towers[1], warehouses[0]).get();
+			Utils.printPath(shortestPath);
+			Assertions.assertIterableEquals(
+					Arrays.asList(towers[1], bunkers[1], warehouses[0]),
+					shortestPath
+			);
+		}
+		{
+			KrtkolandImpl krtkoland = new KrtkolandImpl();
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[4], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[2], bunkers[4], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
+			//printAllEdges(krtkoland);
+
+			updateToFullGraph(krtkoland, 1000);
+
+			List<Room> shortestPath = DijkstraGraphAlgorithm.findShortestPath(krtkoland, towers[1], warehouses[0]).get();
+			Utils.printPath(shortestPath);
+			Assertions.assertIterableEquals(
+					Arrays.asList(towers[1], bunkers[1], bunkers[0], warehouses[0]),
+					shortestPath
+			);
+		}
+		{
+			KrtkolandImpl krtkoland = new KrtkolandImpl();
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[4], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[2], bunkers[4], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[0], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[1], bunkers[1], bunkers[2], warehouses[0]);
+			Utils.addSimplePath(krtkoland, towers[1], bunkers[0], warehouses[0]);
+			//printAllEdges(krtkoland);
+
+			updateToFullGraph(krtkoland, 1);
+
+			List<Room> shortestPath = DijkstraGraphAlgorithm.findShortestPath(krtkoland, towers[1], warehouses[0]).get();
+			Utils.printPath(shortestPath);
+			Assertions.assertIterableEquals(
+					Arrays.asList(towers[1], warehouses[0]),
+					shortestPath
+			);
+		}
 	}
 
+	@Test
+	public void testUtils() {
+		KrtkolandImpl krtkoland = new KrtkolandImpl();
+		Utils.addSimplePath(krtkoland, towers[0], bunkers[2], warehouses[0]);
+		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], warehouses[0]);
+		Utils.addSimplePath(krtkoland, towers[0], bunkers[1], bunkers[2], warehouses[0]);
+		Utils.addSimplePath(krtkoland, towers[3], bunkers[2], bunkers[5], bunkers[6], warehouses[0]);
 
+		// 18 orientovaných hrán, 9 keby sa brali ako neorientované
+		assertEquals(18, krtkoland.getEdges().size());
+
+		updateToFullGraph(krtkoland, 1);
+		// skontrolujeme či po updateToFullGraph je naozaj prepojený každý vrchol s každým: N * (N - 1) počet hrán v orientovanom grafe:
+		assertEquals(krtkoland.getVertices().size() * (krtkoland.getVertices().size() - 1), krtkoland.getEdges().size());
+	}
+
+	static class Utils {
+
+		public static void addSimplePath(KrtkolandImpl k, Room... rooms) {
+			for (int i = 0; i < rooms.length - 1; i++) {
+				Room r1 = rooms[i];
+				Room r2 = rooms[i+1];
+				if (!k.isEdge(r1, r2)) {
+					k.addEdge(
+							new Tunnel(
+									UUID.randomUUID().toString(),
+									r1,
+									r2,
+									1,
+									TunnelSurfaceEnu.BLATO,
+									true
+							)
+					);
+				}
+			}
+		}
+
+		public static void printAllEdges(KrtkolandImpl g) {
+			System.out.println(" =========================================== Vsetky hrany =======================================");
+			g.getEdges().forEach(e -> System.out.println(e.getSource().getId().getValue() + " - " + e.getTarget().getId().getValue()));
+		}
+
+		public static void printPath(List<Room> shortestPath) {
+			System.out.println(
+					shortestPath.stream().map(r -> r.getId().getValue()).collect(Collectors.joining(" - "))
+			);
+		}
+
+
+	}
 }

@@ -41,4 +41,16 @@ public class Tunnel extends AbstractEdge<Room> implements KrtkolandObject {
 
         return weight + getSource().getWeight() + getTarget().getWeight();
     }
+
+    public float getLengthMeters() {
+        return lengthMeters;
+    }
+
+    public TunnelSurfaceEnu getSurface() {
+        return surface;
+    }
+
+    public boolean isLightningIsOk() {
+        return lightningIsOk;
+    }
 }

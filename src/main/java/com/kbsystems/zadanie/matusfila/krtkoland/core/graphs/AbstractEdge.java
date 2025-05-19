@@ -3,7 +3,7 @@ package com.kbsystems.zadanie.matusfila.krtkoland.core.graphs;
 import com.kbsystems.zadanie.matusfila.krtkoland.core.graphs.interfaces.Edge;
 import com.kbsystems.zadanie.matusfila.krtkoland.core.graphs.interfaces.Vertex;
 
-public abstract class AbstractEdge<V extends Vertex> extends AbstractEntityWithID implements Edge<V> {
+public abstract class AbstractEdge<V extends Vertex> extends AbstractEntityWithID implements Edge<V>, Comparable<Edge<V>> {
 
     private final V source;
     private final V target;
@@ -28,4 +28,15 @@ public abstract class AbstractEdge<V extends Vertex> extends AbstractEntityWithI
     public V getTarget() {
         return target;
     }
+
+    @Override
+    public int compareTo(Edge<V> o) {
+        return Float.compare(getWeight(), o.getWeight());
+    }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
 }

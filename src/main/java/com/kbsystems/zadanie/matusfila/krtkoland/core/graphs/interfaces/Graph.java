@@ -10,5 +10,6 @@ public interface Graph<V extends Vertex, E extends Edge<V>> extends GraphObject 
     void addEdge(E edge);
     boolean isEdge(V source, V target);
     Set<E> allEdges(V vertex);
+    Set<V> allNeighbors(V vertex);
 
 }

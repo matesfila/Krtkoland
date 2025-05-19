@@ -7,4 +7,18 @@ public class AbstractVertex extends AbstractEntityWithID implements Vertex {
     public AbstractVertex(ID id) {
         super(id);
     }
+
+    @Override
+    public int hashCode() {
+        return getId().hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof AbstractVertex) {
+            return getId().equals(((AbstractVertex)obj).getId());
+        } else {
+            return false;
+        }
+    }
 }
